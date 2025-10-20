@@ -1,7 +1,7 @@
 # 🎥 GenAI Video Assistant (Offline Local AI Desktop App)
 
 > **Test Assignment — GenAI Software Solutions Engineer**  
-> Candidate: **Howell Ho**  
+> Candidate: **Hao**  
 > Platform: **macOS M1 Pro/Max**  
 > Date: **2025**
 
