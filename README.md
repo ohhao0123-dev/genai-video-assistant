@@ -226,7 +226,7 @@ In the app, enter an **absolute path** to a local `.mp4` video file.
 Example:
 
 ```
-/Users/howell/Documents/Project Collation/genai-video-assistant/Imagine for 1 Minute.mp4
+/Users/mac/Documents/Project Collation/genai-video-assistant/Imagine for 1 Minute.mp4
 ```
 
 Try commands like:
