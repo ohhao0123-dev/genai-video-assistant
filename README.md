@@ -1,7 +1,7 @@
 # 🎥 GenAI Video Assistant (Offline Local AI Desktop App)
 
 > **Test Assignment — GenAI Software Solutions Engineer**  
-> Candidate: **Hao**  
+> Candidate: **Howell Ho**  
 > Platform: **macOS M1 Pro/Max**  
 > Date: **2025**
 
@@ -100,233 +100,214 @@ genai-video-assistant/
 
 ---
 
-## 🧰 Technology Stack
+## ⚙️ Installation and Execution Steps (macOS/Linux)
 
-| Layer | Tools / Libraries | Purpose |
-|-------|--------------------|----------|
-| **Frontend** | React 18 · TypeScript · Vite · Tauri 2 | Lightweight UI and packaging |
-| **Bridge** | Rust · tonic · tokio · serde_json | Secure IPC & gRPC bridge |
-| **Backend** | Python 3.11 · gRPC · faster-whisper · YOLOv8 · ReportLab | Local inference |
-| **Storage** | JSON (`~/.genai_video_assistant/history.json`) | Persistent history |
-| **Platform** | macOS (M1/M2/M3) | Full local runtime |
+Below is the full end-to-end setup process for running **GenAI Video Assistant** locally  
+on macOS or Linux (tested on macOS M1 Pro/Max).
 
 ---
 
-## 💾 Local Model Inference
+### 🧩 1. Clone the Repository
 
-| Model | Function | Backend | Notes |
-|--------|-----------|----------|-------|
-| **Whisper (small)** | Speech-to-text | CTranslate2 | Optimized for Apple Silicon |
-| **YOLOv8n** | Object / Scene detection | Ultralytics | CPU/MPS optimized |
-| **ReportLab** | PDF generation | Local | Fully offline |
-| **python-pptx** | PPTX generation | Local | Fully offline |
-| *(Optional)* PaddleOCR | OCR / chart text recognition | Local | Optional on macOS M1 |
-
-> 🧠 Once models are downloaded, everything runs **completely offline**.
-
----
-
-## ⚙️ Setup Instructions (macOS)
-
-### 1️⃣ Install Dependencies
 ```bash
-xcode-select --install
-brew install ffmpeg protobuf pnpm rustup
-rustup-init
+git clone https://github.com/ohhao0123-dev/genai-video-assistant.git
+cd genai-video-assistant
 ```
 
-### 2️⃣ Backend Setup
+---
+
+### 🐍 2. Create and Manage Conda Environment
+
+Set up a clean Python 3.11 environment for backend execution.
+
+```bash
+conda create -n genai-video-assistant python=3.11
+conda activate genai-video-assistant
+```
+
+You can deactivate or remove the environment later if needed:
+
+```bash
+conda deactivate
+conda env remove -n genai-video-assistant
+```
+
+---
+
+### 🔧 3. Backend Setup (Python gRPC Server)
+
+The backend hosts multiple AI agents (transcription, vision, report generation)  
+and must be running before launching the desktop app.
+
 ```bash
 cd backend
 python3 -m venv .venv
 source .venv/bin/activate
 pip install --upgrade pip wheel setuptools
 pip install -r requirements.txt
+```
 
-# Compile protobufs
-python -m grpc_tools.protoc -I proto --python_out=. --grpc_python_out=. proto/assistant.proto
+---
 
-# Start backend
+### 🧠 4. Compile gRPC Proto Definitions
+
+Generate the Python gRPC bindings from the `assistant.proto` file.
+
+```bash
+python -m grpc_tools.protoc   -I backend/proto   --python_out=backend/proto   --grpc_python_out=backend/proto   backend/proto/assistant.proto
+```
+
+If successful, this creates two files inside `backend/proto/`:
+```
+assistant_pb2.py
+assistant_pb2_grpc.py
+```
+
+---
+
+### ▶️ 5. Start the Python Backend Server
+
+Run the backend (ensure no other process uses port 50051):
+
+```bash
 python server.py
 ```
-✅ You should see:
+
+✅ **Expected output:**
 ```
 Python gRPC backend listening on :50051
 ```
 
-### 3️⃣ Frontend Setup
+Keep this terminal open while running the frontend (next step).
+
+---
+
+### 🧰 6. Frontend Setup (React + Tauri Desktop App)
+
+Open a new terminal window (**do not close the backend**).
+
+Install Node.js, npm, and pnpm via Conda:
+
+```bash
+conda install -c conda-forge nodejs
+```
+
+Verify installation:
+```bash
+node -v
+npm -v
+```
+
+Install PNPM globally (for package management):
+```bash
+npm install -g pnpm
+pnpm -v
+```
+
+---
+
+### 🖥️ 7. Launch the Frontend Application
+
+Navigate to the frontend folder and start the Tauri app:
+
 ```bash
 cd frontend
 pnpm install
 pnpm tauri dev
 ```
-This opens the **GenAI Video Assistant** desktop window.
+
+✅ You should see the **GenAI Video Assistant** desktop window open.
 
 ---
 
-## 💡 Usage Guide
+### 🧪 8. Verify Functionality
 
-### Select a Local Video File
-Example:  
-`/Users/howell/Documents/Project/genai-video-assistant/ImagineFor1Minute.mp4`
+In the app, enter an **absolute path** to a local `.mp4` video file.  
+Example:
 
-### Example Queries
-- “Transcribe the video.”
-- “What objects are shown?”
-- “Are there any graphs?”
-- “Create a PowerPoint with key points.”
-- “Summarize and generate a PDF report.”
+```
+/Users/howell/Documents/Project Collation/genai-video-assistant/Imagine for 1 Minute.mp4
+```
 
-### Output Locations
-| Type | Location |
-|------|-----------|
-| `.srt` subtitles | Same folder as video |
-| `summary.pdf` / `summary.pptx` | `backend/outputs/` |
-| Chat history | `~/.genai_video_assistant/history.json` |
+Try commands like:
+- `Transcribe the video`
+- `What objects are shown in the video?`
+- `Create a PowerPoint with the key points`
+- `Summarize and generate a PDF`
 
----
-
-## 🧠 Human-in-the-loop Clarification
-
-If a user request is incomplete or unclear, the backend prompts:
-> **Clarification:** “Need a transcript first — run *‘Transcribe the video’*?”
-
-This ensures **logical workflow order** and **error prevention**.
-
----
-
-## 🔒 Offline Design Compliance
-
-All computation runs **locally**:
-- No cloud APIs or online endpoints  
-- All model weights cached locally  
-- gRPC restricted to `localhost`
-
-**Privacy Guaranteed:**  
-All data, transcripts, and outputs remain on the user’s device.
-
----
-
-## 🧭 Example Interaction Flow
-
-```text
-User: Transcribe the video.
-→ TranscriptionAgent: transcript + .srt generated
-
-User: What objects are shown?
-→ VisionAgent: person(18), laptop(4), screen(1), possible chart detected
-
-User: Summarize and generate a PDF.
-→ GenerationAgent: summary.pdf created under backend/outputs/
+Check generated results in:
+```
+backend/outputs/
 ```
 
 ---
 
-## 🛠️ Troubleshooting
+### ⚙️ 9. (Optional) Troubleshooting Commands
 
-| Issue | Cause | Fix |
-|--------|--------|------|
-| `protoc not found` | Missing compiler | `brew install protobuf` |
-| `Command process_query not found` | Tauri not registered | Add to `generate_handler![]` in `main.rs` |
-| No output | Backend not running | Ensure Python backend shows connection |
-| PaddleOCR fails on M1 | Incompatible build | Remove it from `requirements.txt` |
-
----
-
-## 🔄 Build & Packaging
-
-**Development**
+**Rebuild gRPC bindings**
 ```bash
+python -m grpc_tools.protoc -I backend/proto --python_out=. --grpc_python_out=. backend/proto/assistant.proto
+```
+
+**Clean Rust and Frontend builds**
+```bash
+cd frontend/src-tauri
+cargo clean
+cd ..
 pnpm tauri dev
 ```
 
-**Production**
+**Update Node and Rust toolchains**
 ```bash
-pnpm tauri build
+brew upgrade node rustup
+rustup update
 ```
-Output:  
-`frontend/src-tauri/target/release/bundle/macos/GenAI Video Assistant.app`
 
 ---
 
-## 🧮 Clarification Logic Summary
+### 🧾 Environment Summary
 
-| User Intent | Routed Agent | Clarification |
-|--------------|---------------|----------------|
-| Transcription | TranscriptionAgent | — |
-| Object Detection | VisionAgent | — |
-| Generate PDF/PPT | GenerationAgent | Needs transcript first |
-| Unknown command | — | Suggest valid options |
+| Component | Version (Recommended) | Description |
+|------------|----------------------|--------------|
+| **Python** | 3.11 | Backend (AI agents, gRPC server) |
+| **Node.js** | ≥ 18.x | Frontend (React + Vite) |
+| **Rust** | ≥ 1.75 | Tauri bridge and gRPC client |
+| **PNPM** | ≥ 8.x | Frontend package manager |
+| **Conda** | ≥ 24.x | Environment manager |
 
----
-
-## 📊 Performance (M1 Pro)
-
-| Task | Duration | Model | Remarks |
-|-------|-----------|--------|----------|
-| Transcription (1-min video) | 5–8s | Whisper-small-int8 | Real-time |
-| Object Detection | 2–4s | YOLOv8n | Optimized |
-| PDF/PPT Generation | < 1s | ReportLab / PPTX | Instant |
+✅ **After setup, you’ll have:**
+- 🧠 Local AI agents running via Python gRPC  
+- ⚡ Interactive Tauri desktop UI via Rust + React  
+- 📄 Outputs: Transcripts (.srt), Summaries (.pdf), Presentations (.pptx)  
+- 💬 Persistent chat logs stored locally under  
+  `~/.genai_video_assistant/history.json`
 
 ---
 
-## 🧩 Architecture Modules
+### 🧹 10. Cleanup (Optional)
 
-| Module | File | Role |
-|--------|------|------|
-| gRPC Definitions | `backend/proto/assistant.proto` | Defines RPC methods |
-| Backend Service | `backend/server.py` | Dispatches to agents |
-| Rust Bridge | `src-tauri/src/main.rs` | Handles IPC calls |
-| Frontend UI | `frontend/src/App.tsx` | Chat interface |
-| Persistence | `chat_store.py` | Local JSON history |
+When you’re done testing:
 
----
-
-## 🚀 Future Improvements
-
-| Category | Enhancement |
-|-----------|--------------|
-| Architecture | Split agents into micro-services |
-| Summarization | Integrate local LLM (Llama.cpp / Mistral) |
-| Graph Detection | Add PaddleOCR + CNN classifier |
-| UX | Drag-drop uploads, progress bars, previews |
-| Cross-Platform | Add Windows & Linux builds |
-| Automation | Auto-launch backend process |
+```bash
+# Stop backend (Ctrl + C in terminal)
+conda deactivate
+conda env remove -n genai-video-assistant
+```
 
 ---
 
-## 📈 Status Summary
+### ✅ Quick Recap
 
-✅ **Working**
-- Offline transcription & object detection  
-- gRPC bridge (Python ↔ Rust)  
-- Natural language chat UI  
-- PDF/PPT generation  
-- Persistent chat history  
-
-⚠️ **Not Implemented**
-- OCR chart recognition  
-- Cloud fallback  
-- Multi-threaded orchestration  
+| Step | Action | Command |
+|------|---------|----------|
+| 1 | Clone the repo | `git clone …` |
+| 2 | Create Conda environment | `conda create -n genai-video-assistant python=3.11` |
+| 3 | Install backend dependencies | `pip install -r requirements.txt` |
+| 4 | Compile gRPC definitions | `python -m grpc_tools.protoc …` |
+| 5 | Run backend server | `python server.py` |
+| 6 | Install frontend dependencies | `pnpm install` |
+| 7 | Launch desktop app | `pnpm tauri dev` |
 
 ---
 
-## 🧾 License
-
-**MIT License © 2025 Howell Ho**  
-This project was created as part of the **GenAI Software Solutions Engineer Test Assignment**.  
-You may freely use and adapt it for educational or demonstration purposes.
-
----
-
-## 🧩 Summary
-
-The **GenAI Video Assistant** demonstrates a **complete offline AI system** integrating:
-
-- Agentic modular architecture  
-- Local inference with Whisper & YOLO  
-- Cross-language orchestration (React → Rust → Python)  
-- Explainable, persistent, and privacy-safe workflows  
-
-✅ **Key Takeaway:**  
-A modular, transparent, and offline **GenAI architecture** for practical, human-in-the-loop video understanding.
+🎉 **Your local GenAI Video Assistant app is now fully functional and running offline!**
