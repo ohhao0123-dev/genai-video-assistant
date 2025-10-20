@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+package assistant;
+
+service Assistant {
+  rpc ProcessQuery (QueryRequest) returns (QueryReply);
+  rpc GenerateReport (ReportRequest) returns (ReportReply);
+  rpc GetHistory (HistoryRequest) returns (HistoryReply);
+}
+
+message QueryRequest {
+  string video_path = 1;
+  string query = 2;
+  string session_id = 3;
+}
+
+message QueryReply {
+  string session_id = 1;
+  string answer = 2;
+  repeated string artifacts = 3;
+  bool needs_clarification = 4;
+  string clarification_prompt = 5;
+}
+
+message ReportRequest {
+  string session_id = 1;
+  string format = 2; // "pdf" or "pptx"
+}
+
+message ReportReply {
+  string session_id = 1;
+  string path = 2;
+}
+
+message HistoryRequest {
+  string session_id = 1;
+}
+
+message HistoryReply {
+  string session_id = 1;
+  string history_json = 2;
+}

@@ -1,0 +1,25 @@
+# Core
+grpcio==1.66.1
+grpcio-tools==1.66.1
+protobuf==5.27.3
+pydantic==2.9.2
+numpy
+opencv-python
+ffmpeg-python
+
+# Models (local)
+faster-whisper
+torch
+torchvision
+ultralytics
+# (Optional OCR; can be tricky on arm64. If it fails, comment these.)
+paddlepaddle==2.6.1; platform_machine != 'arm64'
+paddleocr
+
+# Reports
+reportlab
+python-pptx
+
+# Utils
+tqdm
+rich
